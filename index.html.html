@@ -6,7 +6,7 @@
     <title>Mesh Room — Общий Чат и Связь</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2 family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
@@ -31,7 +31,6 @@
         
         .app-container { display: flex; width: 100%; max-width: 1280px; height: 90vh; background-color: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
 
-        /* ЛЕВАЯ ПАНЕЛЬ (Управление комнатой) */
         .left-panel { width: 38%; background-color: var(--bg-left); color: var(--text-left-main); display: flex; flex-direction: column; padding: 24px; border-right: 1px solid rgba(0, 0, 0, 0.1); }
         .left-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .left-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
@@ -55,7 +54,6 @@
         .status-dot { width: 8px; height: 8px; background: var(--text-left-muted); border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-dot.active { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
 
-        /* ПРАВАЯ ПАНЕЛЬ (Общий чат) */
         .right-panel { width: 62%; background: linear-gradient(180deg, var(--bg-right-top) 0%, var(--bg-right-bottom) 100%); color: var(--text-right-main); display: flex; flex-direction: column; padding: 24px; }
         .right-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 20px; }
         .right-nav { display: flex; gap: 20px; font-size: 13px; color: var(--text-right-muted); }
@@ -88,7 +86,6 @@
 <body>
 
     <div class="app-container">
-        
         <aside class="left-panel">
             <div class="left-header">
                 <div class="left-title">
@@ -111,8 +108,7 @@
             </div>
 
             <div class="my-id-label" style="margin-bottom: 8px;">Участники в комнате:</div>
-            <div class="connected-peers-section" id="peers-list">
-                </div>
+            <div class="connected-peers-section" id="peers-list"></div>
 
             <div class="status-list">
                 <span class="status-dot" id="status-indicator"></span>
@@ -135,7 +131,7 @@
                     <div>
                         <div class="chat-title-inside">// Поток сообщений и аудио-логов</div>
                         <div class="chat-logs" id="chat-box">
-                            <p class="msg-line system">[Система]: Общая комната создана. Передайте свой ID другим челам, чтобы они подключились к чату и звонку.</p>
+                            <p class="msg-line system">[Система]: Общая комната создана. Передайте свой ID другим челам, чтобы они подключились.</p>
                         </div>
                     </div>
                 </div>
@@ -161,39 +157,33 @@
                 <button id="send-btn" onclick="sendGroupMessage()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </main>
-
     </div>
 
     <div id="audio-containers"></div>
 
     <script>
         let peer = null;
-        // Генерируем случайный красивый ID
         const myId = "NODE_" + Math.floor(10000 + Math.random() * 90000);
-        
         let dataConnections = {}; 
         let activeCalls = {};
         let localStream = null;
 
-        // Часы
         setInterval(() => {
             const now = new Date();
             document.getElementById('live-clock').innerText = now.toTimeString().split(' ')[0];
         }, 1000);
 
-        // Слушаем Enter в инпуте
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendGroupMessage();
         });
 
-        // Запрашиваем микрофон сразу при старте страницы
         async function initAudioStream() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 logToTerminal(`[Система]: Аппаратный микрофон успешно захвачен.`);
                 initPeerServer();
             } catch (e) {
-                alert("Для работы общего чата и звонков нужен микрофон!");
+                alert("Нужен доступ к микрофону!");
                 logToTerminal(`[Ошибка]: Доступ к микрофону отклонен.`);
             }
         }
@@ -202,46 +192,30 @@
 
         function initPeerServer() {
             peer = new Peer(myId);
-
             peer.on('open', (id) => {
                 document.getElementById('my-peer-id').innerText = id;
                 document.getElementById('status-indicator').className = "status-dot active";
                 document.getElementById('status-text').innerText = "Подключено к шлюзу WebRTC.";
             });
-
-            // Ловим входящие сообщения/подключения от других челов
-            peer.on('connection', (conn) => {
-                handleInboundDataConnection(conn);
-            });
-
-            // Ловим входящий звук
+            peer.on('connection', handleInboundDataConnection);
             peer.on('call', (call) => {
                 call.answer(localStream);
                 handleInboundAudioCall(call);
             });
         }
 
-        // Кнопка: Добавить чела в сессию
         function addNewPeer() {
             const remoteId = document.getElementById('remote-peer-id').value.trim();
-            if (!remoteId) return alert("Введите ID");
-            if (remoteId === myId) return alert("Вы ввели свой ID");
-            if (dataConnections[remoteId]) return alert("Этот чел уже в чате");
+            if (!remoteId || remoteId === myId || dataConnections[remoteId]) return;
 
             logToTerminal(`[Система]: Соединение с узлом ${remoteId}...`);
-
-            const conn = peer.connect(remoteId);
-            handleInboundDataConnection(conn);
-
-            const call = peer.call(remoteId, localStream);
-            handleInboundAudioCall(call);
-
+            handleInboundDataConnection(peer.connect(remoteId));
+            handleInboundAudioCall(peer.call(remoteId, localStream));
             document.getElementById('remote-peer-id').value = '';
         }
 
         function handleInboundAudioCall(call) {
             activeCalls[call.peer] = call;
-
             call.on('stream', (remoteStream) => {
                 let audioElem = document.getElementById(`audio-${call.peer}`);
                 if (!audioElem) {
@@ -253,10 +227,8 @@
                 audioElem.srcObject = remoteStream;
                 updateInterfaceCounters();
             });
-
             call.on('close', () => {
-                const audioElem = document.getElementById(`audio-${call.peer}`);
-                if (audioElem) audioElem.remove();
+                if (document.getElementById(`audio-${call.peer}`)) document.getElementById(`audio-${call.peer}`).remove();
                 delete activeCalls[call.peer];
                 updateInterfaceCounters();
             });
@@ -264,18 +236,13 @@
 
         function handleInboundDataConnection(conn) {
             dataConnections[conn.peer] = conn;
-
             conn.on('open', () => {
-                logToTerminal(`[Вошел]: Чел <b>${conn.peer}</b> подключился к общей комнате.`);
+                logToTerminal(`[Вошел]: Чел <b>${conn.peer}</b> подключился.`);
                 updateInterfaceCounters();
             });
-
             conn.on('data', (data) => {
-                if(data.type === 'chat') {
-                    logToTerminal(`<strong>${conn.peer}:</strong> ${data.text}`);
-                }
+                if(data.type === 'chat') logToTerminal(`<strong>${conn.peer}:</strong> ${data.text}`);
             });
-
             conn.on('close', () => {
                 logToTerminal(`[Вышел]: Чел <b>${conn.peer}</b> отключился.`);
                 delete dataConnections[conn.peer];
@@ -283,46 +250,30 @@
             });
         }
 
-        // Отправка сообщений всем, кто сейчас в сети
         function sendGroupMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text) return;
 
-            const payload = { type: 'chat', text: text };
-
             Object.values(dataConnections).forEach(conn => {
-                if (conn.open) {
-                    conn.send(payload);
-                }
+                if (conn.open) conn.send({ type: 'chat', text: text });
             });
-
             logToTerminal(`<strong>Вы:</strong> ${text}`);
             input.value = '';
         }
 
         function updateInterfaceCounters() {
-            const peersListContainer = document.getElementById('peers-list');
-            peersListContainer.innerHTML = '';
-
-            const activePeerIds = Object.keys(dataConnections);
-            
-            activePeerIds.forEach(id => {
+            const container = document.getElementById('peers-list');
+            container.innerHTML = '';
+            Object.keys(dataConnections).forEach(id => {
                 const badge = document.createElement('div');
                 badge.className = 'peer-badge';
                 badge.innerHTML = `<span><i class="fa-solid fa-microphone"></i> ${id}</span> <small style="color:var(--text-left-muted)">в сети</small>`;
-                peersListContainer.appendChild(badge);
+                container.appendChild(badge);
             });
-
             const totalCalls = Object.keys(activeCalls).length;
-            const audioPill = document.getElementById('audio-status-pill');
-            if(totalCalls > 0) {
-                audioPill.innerText = `Линии: ${totalCalls} участников`;
-                audioPill.classList.add('active');
-            } else {
-                audioPill.innerText = `Линии: 0 активных`;
-                audioPill.classList.remove('active');
-            }
+            document.getElementById('audio-status-pill').innerText = totalCalls > 0 ? `Линии: ${totalCalls} участников` : `Линии: 0 активных`;
+            document.getElementById('audio-status-pill').className = totalCalls > 0 ? 'indicator-pill active' : 'indicator-pill';
         }
 
         function logToTerminal(htmlContent) {
