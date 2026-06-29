@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    
     <style>
         :root {
             --bg-left: #eef1f6;
@@ -25,66 +24,51 @@
             --accent-blue: #38bdf8;
             --accent-red: #ef4444;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: #0b0c0e; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        
         .app-container { display: flex; width: 100%; max-width: 1280px; height: 90vh; background-color: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
-
         .left-panel { width: 38%; background-color: var(--bg-left); color: var(--text-left-main); display: flex; flex-direction: column; padding: 24px; border-right: 1px solid rgba(0, 0, 0, 0.1); }
         .left-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .left-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         .left-title i { color: var(--accent-red); }
-        
         .my-id-container { background: rgba(0,0,0,0.04); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed rgba(0,0,0,0.1); }
         .my-id-label { font-size: 12px; color: var(--text-left-muted); text-transform: uppercase; font-weight: 600; }
         .my-id-value { font-size: 20px; font-weight: 700; color: #000; font-family: monospace; margin-top: 4px; letter-spacing: 1px; }
-
         .connection-box { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .connection-box input { background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 14px; font-size: 14px; outline: none; font-family: monospace; }
         .btn-connect { background: #1e293b; color: #fff; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-connect:hover { background: #0f172a; }
-
         .connected-peers-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .peer-badge { background: #fff; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; border: 1px solid rgba(0,0,0,0.05); }
         .peer-badge span { display: flex; align-items: center; gap: 8px; font-family: monospace; }
         .peer-badge i { color: var(--accent-green); }
-
         .status-list { padding: 12px; background: rgba(0,0,0,0.02); border-radius: 8px; font-size: 13px; color: var(--text-left-muted); margin-top: auto; }
         .status-dot { width: 8px; height: 8px; background: var(--text-left-muted); border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-dot.active { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-
         .right-panel { width: 62%; background: linear-gradient(180deg, var(--bg-right-top) 0%, var(--bg-right-bottom) 100%); color: var(--text-right-main); display: flex; flex-direction: column; padding: 24px; }
         .right-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 20px; }
         .right-nav { display: flex; gap: 20px; font-size: 13px; color: var(--text-right-muted); }
         .right-nav span.active { color: #fff; font-weight: 600; }
         .right-meta { font-size: 12px; color: var(--text-right-muted); font-family: monospace; }
-
         .dashboard-layout { display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
         .chat-main-card { background: var(--bg-right-card); border: 1px solid var(--border-right-card); border-radius: 16px; padding: 20px; flex: 1.2; display: flex; flex-direction: column; justify-content: space-between; backdrop-filter: blur(10px); }
         .chat-title-inside { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-right-muted); margin-bottom: 12px; }
-        
         .chat-logs { font-size: 14px; color: #cbd5e1; line-height: 1.6; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; padding-right: 5px; }
         .msg-line { margin-bottom: 4px; }
         .msg-line.system { color: var(--text-right-muted); font-size: 12px; }
-        
         .lower-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .sub-card { background: var(--bg-right-card); border: 1px solid var(--border-right-card); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; backdrop-filter: blur(10px); }
         .sub-card-header { font-size: 12px; font-weight: 600; color: var(--text-right-muted); }
         .sub-card-body { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-
         .indicator-pill { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--accent-red); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; transition: all 0.3s; }
         .indicator-pill.active { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2); color: var(--accent-green); }
-
         .chat-input-bar { display: flex; gap: 12px; margin-top: 16px; }
         .chat-input-bar input { flex: 1; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 12px 16px; color: #fff; outline: none; font-size: 13px; }
         .chat-input-bar button { background: #fff; border: none; color: #000; padding: 0 16px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-        
         #audio-containers { display: none; }
     </style>
 </head>
 <body>
-
     <div class="app-container">
         <aside class="left-panel">
             <div class="left-header">
@@ -93,12 +77,10 @@
                     <span>Mesh Hub Room</span>
                 </div>
             </div>
-
             <div class="my-id-container">
                 <div class="my-id-label">Ваш выделенный ID:</div>
                 <div class="my-id-value" id="my-peer-id">Генерация...</div>
             </div>
-
             <div class="connection-box">
                 <label class="my-id-label">Добавить чела в общий канал (ID):</label>
                 <input type="text" id="remote-peer-id" placeholder="Вставьте ID участника...">
@@ -106,16 +88,13 @@
                     <i class="fa-solid fa-user-plus"></i> Подключить к сессии
                 </button>
             </div>
-
             <div class="my-id-label" style="margin-bottom: 8px;">Участники в комнате:</div>
             <div class="connected-peers-section" id="peers-list"></div>
-
             <div class="status-list">
                 <span class="status-dot" id="status-indicator"></span>
                 <span id="status-text">Запуск сетевого коммутатора...</span>
             </div>
         </aside>
-
         <main class="right-panel">
             <div class="right-header">
                 <div class="right-nav">
@@ -125,7 +104,6 @@
                     <span id="live-clock">00:00</span>
                 </div>
             </div>
-
             <div class="dashboard-layout">
                 <div class="chat-main-card">
                     <div>
@@ -135,7 +113,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="lower-cards-grid">
                     <div class="sub-card">
                         <div class="sub-card-header">Активные аудиопотоки</div>
@@ -151,16 +128,13 @@
                     </div>
                 </div>
             </div>
-
             <div class="chat-input-bar">
                 <input type="text" id="message-input" placeholder="Написать сообщение в общий чат для всех...">
                 <button id="send-btn" onclick="sendGroupMessage()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </main>
     </div>
-
     <div id="audio-containers"></div>
-
     <script>
         let peer = null;
         const myId = "NODE_" + Math.floor(10000 + Math.random() * 90000);
