@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Лабиринт: 3 уровня</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;user-select:none}
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;user-select:none}
 #wrap{position:relative;width:800px;max-width:100vw}
 canvas{display:block;width:100%;background:#000;border:3px solid #c9b458;border-radius:6px}
 #hud{display:flex;justify-content:space-between;width:100%;padding:6px 4px;font-size:18px;color:#e8d98a}
@@ -11,26 +15,30 @@ canvas{display:block;width:100%;background:#000;border:3px solid #c9b458;border-
 h1{color:#e8d98a;margin:0 0 10px;font-size:40px;letter-spacing:2px}
 p{max-width:560px;line-height:1.5;color:#ccc}
 button{background:#c9b458;color:#111;border:0;padding:12px 26px;font-size:20px;font-weight:bold;border-radius:8px;margin:6px;cursor:pointer}
-button:hover{background:#f0dc7a}button.alt{background:#444;color:#eee}
+button:hover{background:#f0dc7a}
+button.alt{background:#444;color:#eee}
 input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px;border:2px solid #c9b458;background:#222;color:#fff;letter-spacing:6px}
 #codeShow{font-size:64px;color:#7CFC00;letter-spacing:12px;font-family:monospace;margin:10px}
 #secret{font-size:72px;color:#ffe75a;text-shadow:0 0 20px #ffd000;letter-spacing:6px;margin:20px;animation:pulse 1.5s infinite}
 @keyframes pulse{50%{opacity:.6;transform:scale(1.05)}}
 #err{color:#ff5555;height:22px}
-#pad{display:none;margin-top:10px}#pad button{width:64px;height:64px;font-size:26px;padding:0}
+#pad{display:none;margin-top:10px}
+#pad button{width:64px;height:64px;font-size:26px;padding:0}
 @media (pointer:coarse){#pad{display:grid;grid-template-columns:repeat(3,64px);gap:4px}}
-</style></head><body>
+</style>
+</head>
+<body>
 <div id="wrap">
  <div id="hud"><span id="hLevel">Уровень 1/3</span><span id="hKeys">🔑 0/0</span><span id="hTime"></span><span id="hLives">❤️❤️❤️❤️❤️</span></div>
  <canvas id="c" width="800" height="600"></canvas>
-​
+
  <div class="screen" id="menu">
   <h1>ЛАБИРИНТ</h1>
   <p>3 сложных уровня. Собери все ключи 🔑, чтобы открыть выход. Не касайся красных врагов — но иногда они становятся прозрачными 👻, и тогда сквозь них можно пройти! У тебя всего 5 жизней на всю игру — потеряешь все, и начнёшь с первого уровня.<br>Управление: <b>WASD</b> или <b>стрелки</b>.</p>
   <button id="btnPlay" type="button">▶ Играть</button>
   <button class="alt" id="btnLock">🔒 Секрет (нужен код)</button>
  </div>
-​
+
  <div class="screen hidden" id="codeScreen">
   <h1>🔒 Введите код</h1>
   <p>Код выдаётся только тем, кто прошёл все 3 уровня.</p>
@@ -38,18 +46,18 @@ input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px
   <div id="err"></div>
   <div><button id="btnCheck">Проверить</button><button class="alt" id="btnBack">Назад</button></div>
  </div>
-​
+
  <div class="screen hidden" id="secretScreen">
   <h1>✅ Код верный!</h1>
   <p>Твоё секретное слово:</p>
   <div id="secret">БЕКРУМС</div>
   <button class="alt" id="btnBack2">В меню</button>
  </div>
-​
+
  <div class="screen hidden" id="msg">
   <h1 id="msgTitle"></h1><p id="msgText"></p><button id="msgBtn">Дальше</button>
  </div>
-​
+
  <div class="screen hidden" id="winScreen">
   <h1>🏆 ТЫ ПРОШЁЛ ВСЕ 3 УРОВНЯ!</h1>
   <p>Запомни этот код. При следующем запуске нажми «🔒 Секрет» и введи его:</p>
@@ -59,12 +67,18 @@ input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px
 </div>
 <div style="color:#666;font-size:12px;margin-top:6px">версия 3</div>
 <div id="pad"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button></div>
-​
+
 <script>
-window.onerror=function(m,u,l){var d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;right:0;background:#b00;color:#fff;padding:10px;z-index:9999;font:16px monospace";d.textContent="Ошибка: "+m+" (строка "+l+")";document.body.appendChild(d)};
-const SECRET_CODE="7349";
-/*LEVELS*/
-const LEVELS=[
+window.onerror = function(m, u, l) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;top:0;left:0;right:0;background:#b00;color:#fff;padding:10px;z-index:9999;font:16px monospace";
+  d.textContent = "Ошибка: " + m + " (строка " + l + ")";
+  document.body.appendChild(d);
+};
+
+const SECRET_CODE = "7349";
+
+const LEVELS = [
 {name:"Уровень 1: Коридоры",time:0,safe:.5,dark:false,chasers:0,map:[
 "####################",
 "#S.....#...........#",
@@ -117,81 +131,199 @@ enemies:[[8,1,"h",3],[3,5,"h",2.6],[1,9,"v",2.4],[9,7,"h",3],[5,11,"h",3.2],[18,
 "####################"],
 enemies:[[5,1,"h",3],[13,1,"h",3.2],[7,5,"h",2.8],[18,4,"v",2.6],[4,7,"h",3],[3,9,"h",3.2],[12,9,"h",2.8],[16,11,"h",3],[6,13,"h",3.4],[14,13,"h",3.6],[1,10,"v",2.4]]}
 ];
-/*END*/
-const T=40,cv=document.getElementById('c'),ctx=cv.getContext('2d');
-const $=id=>document.getElementById(id);
-let lv=0,lives=5,map,player,enemies,keysTotal,keysGot,exitPos,timeLeft,running=false,inv=0,chasers=[],lastT=0,flash=0;
-const input={up:0,down:0,left:0,right:0};
-const km={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
-addEventListener('keydown',e=>{if(km[e.code]){input[km[e.code]]=1;e.preventDefault()}});
-addEventListener('keyup',e=>{if(km[e.code])input[km[e.code]]=0});
-document.querySelectorAll('#pad button').forEach(b=>{const k=b.dataset.k;
- b.addEventListener('touchstart',e=>{input[k]=1;e.preventDefault()});b.addEventListener('touchend',e=>{input[k]=0;e.preventDefault()});});
-​
-function show(id){['menu','codeScreen','secretScreen','msg','winScreen'].forEach(s=>$(s).classList.toggle('hidden',s!==id))}
-function wall(tx,ty){if(ty<0||ty>=map.length||tx<0||tx>=20)return true;return map[ty][tx]==='#'}
-function hitsWall(x,y,r){for(let ty=Math.floor((y-r)/T);ty<=Math.floor((y+r-.01)/T);ty++)for(let tx=Math.floor((x-r)/T);tx<=Math.floor((x+r-.01)/T);tx++)if(wall(tx,ty))return true;return false}
-​
+
+const T = 40, cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+let lv = 0, lives = 5, map, player, enemies, keysTotal, keysGot, exitPos, timeLeft, running = false, inv = 0, chasers = [], lastT = 0, flash = 0;
+const input = {up:0,down:0,left:0,right:0};
+const km = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+
+addEventListener('keydown', e => { if(km[e.code]){ input[km[e.code]] = 1; e.preventDefault(); } });
+addEventListener('keyup', e => { if(km[e.code]) input[km[e.code]] = 0; });
+
+document.querySelectorAll('#pad button').forEach(b => {
+  const k = b.dataset.k;
+  b.addEventListener('touchstart', e => { input[k] = 1; e.preventDefault(); });
+  b.addEventListener('touchend', e => { input[k] = 0; e.preventDefault(); });
+});
+
+function show(id){ ['menu','codeScreen','secretScreen','msg','winScreen'].forEach(s => $(s).classList.toggle('hidden', s !== id)); }
+function wall(tx,ty){ if(ty<0||ty>=map.length||tx<0||tx>=20) return true; return map[ty][tx] === '#'; }
+function hitsWall(x,y,r){ for(let ty=Math.floor((y-r)/T);ty<=Math.floor((y+r-.01)/T);ty++) for(let tx=Math.floor((x-r)/T);tx<=Math.floor((x+r-.01)/T);tx++) if(wall(tx,ty)) return true; return false; }
+
 function loadLevel(i){
- const L=LEVELS[i];map=L.map.map(r=>r.split(''));keysTotal=0;keysGot=0;
- for(let y=0;y<15;y++)for(let x=0;x<20;x++){const c=map[y][x];
-  if(c==='S'){player={x:x*T+T/2,y:y*T+T/2,sx:x*T+T/2,sy:y*T+T/2,r:11,sp:3.2}}
-  if(c==='K')keysTotal++;if(c==='E')exitPos={x,y};}
- enemies=L.enemies.map(([x,y,d,s])=>({x:x*T+T/2,y:y*T+T/2,dx:d==='h'?1:0,dy:d==='v'?1:0,sp:s,r:11,ph:Math.random()*3}));
- chasers=[];for(let k=0;k<L.chasers;k++)chasers.push({x:exitPos.x*T+T/2,y:exitPos.y*T+T/2-200,sp:1.05,r:16});
- timeLeft=L.time;inv=60;updHud();
+  const L = LEVELS[i];
+  map = L.map.map(r => r.split(''));
+  keysTotal = 0; keysGot = 0;
+  for(let y=0;y<15;y++) for(let x=0;x<20;x++){
+    const c = map[y][x];
+    if(c === 'S'){ player = {x:x*T+T/2, y:y*T+T/2, sx:x*T+T/2, sy:y*T+T/2, r:11, sp:3.2}; }
+    if(c === 'K') keysTotal++;
+    if(c === 'E') exitPos = {x,y};
+  }
+  enemies = L.enemies.map(([x,y,d,s]) => ({x:x*T+T/2, y:y*T+T/2, dx:d==='h'?1:0, dy:d==='v'?1:0, sp:s, r:11, ph:Math.random()*3}));
+  chasers = [];
+  for(let k=0;k<L.chasers;k++) chasers.push({x:exitPos.x*T+T/2, y:exitPos.y*T+T/2-200, sp:1.05, r:16});
+  timeLeft = L.time; inv = 60; updHud();
 }
-function updHud(){$('hLevel').textContent=`Уровень ${lv+1}/3`;$('hKeys').textContent=`🔑 ${keysGot}/${keysTotal}`;
- $('hLives').textContent='❤️'.repeat(lives)+'🖤'.repeat(5-lives);$('hTime').textContent=LEVELS[lv].time?`⏱ ${Math.ceil(timeLeft)}с`:'';}
-​
-function message(t,txt,btn,cb){$('msgTitle').textContent=t;$('msgText').innerHTML=txt;$('msgBtn').textContent=btn;$('msgBtn').onclick=cb;show('msg');running=false}
-function startLevel(){loadLevel(lv);const L=LEVELS[lv];
- let extra=L.time?`<br>⏱ Ограничение по времени: ${L.time} секунд!`:'';if(L.dark)extra+='<br>🌑 Ты видишь только вокруг себя. За тобой кто-то идёт сквозь стены...';
- message(L.name,`Собери ${keysTotal} ключа и доберись до выхода.${extra}`,'Начать',()=>{show(null);running=true;lastT=performance.now();requestAnimationFrame(loop)});}
-function die(reason){lives--;flash=20;updHud();
- if(lives<=0){running=false;message('💀 ИГРА ОКОНЧЕНА',reason+'<br>Жизни закончились. Начинаем с первого уровня!','Заново',()=>{lv=0;lives=5;startLevel()});return}
- player.x=player.sx;player.y=player.sy;inv=90;
- if(LEVELS[lv].time&&timeLeft<=0)timeLeft=LEVELS[lv].time;
- chasers.forEach(c=>{c.x=exitPos.x*T+T/2;c.y=exitPos.y*T+T/2-200});}
-function win(){running=false;localStorage.setItem('labyrinthDone','1');$('codeShow').textContent=SECRET_CODE;show('winScreen')}
-​
-function harmless(e){if(e.ph===undefined)return false;const P=3,v=((performance.now()/1000+e.ph)%P)/P;return v<LEVELS[lv].safe}
-function loop(now){if(!running)return;const f=Math.min(3,(now-lastT)/16.67);lastT=now;update(f);draw();requestAnimationFrame(loop)}
+
+function updHud(){
+  $('hLevel').textContent = `Уровень ${lv+1}/3`;
+  $('hKeys').textContent = `🔑 ${keysGot}/${keysTotal}`;
+  $('hLives').textContent = '❤️'.repeat(lives) + '🖤'.repeat(5-lives);
+  $('hTime').textContent = LEVELS[lv].time ? `⏱ ${Math.ceil(timeLeft)}с` : '';
+}
+
+function message(t, txt, btn, cb){
+  $('msgTitle').textContent = t;
+  $('msgText').innerHTML = txt;
+  $('msgBtn').textContent = btn;
+  $('msgBtn').onclick = cb;
+  show('msg'); running = false;
+}
+
+function startLevel(){
+  loadLevel(lv);
+  const L = LEVELS[lv];
+  let extra = L.time ? `<br>⏱ Ограничение по времени: ${L.time} секунд!` : '';
+  if(L.dark) extra += '<br>🌑 Ты видишь только вокруг себя. За тобой кто-то идёт сквозь стены...';
+  message(L.name, `Собери ${keysTotal} ключа и доберись до выхода.${extra}`, 'Начать', () => {
+    show(null); running = true; lastT = performance.now(); requestAnimationFrame(loop);
+  });
+}
+
+function die(reason){
+  lives--; flash = 20; updHud();
+  if(lives <= 0){
+    running = false;
+    message('💀 ИГРА ОКОНЧЕНА', reason + '<br>Жизни закончились. Начинаем с первого уровня!', 'Заново', () => { lv = 0; lives = 5; startLevel(); });
+    return;
+  }
+  player.x = player.sx; player.y = player.sy; inv = 90;
+  if(LEVELS[lv].time && timeLeft <= 0) timeLeft = LEVELS[lv].time;
+  chasers.forEach(c => { c.x = exitPos.x*T+T/2; c.y = exitPos.y*T+T/2-200; });
+}
+
+function win(){
+  running = false;
+  try { localStorage.setItem('labyrinthDone','1'); } catch(e) {}
+  $('codeShow').textContent = SECRET_CODE;
+  show('winScreen');
+}
+
+function harmless(e){
+  if(e.ph === undefined) return false;
+  const P = 3, v = ((performance.now()/1000 + e.ph) % P) / P;
+  return v < LEVELS[lv].safe;
+}
+
+function loop(now){
+  if(!running) return;
+  const f = Math.min(3, (now - lastT) / 16.67);
+  lastT = now; update(f); draw(); requestAnimationFrame(loop);
+}
+
 function update(f){
- let mx=input.right-input.left,my=input.down-input.up;if(mx&&my){mx*=.707;my*=.707}
- const p=player,s=p.sp*f;
- if(!hitsWall(p.x+mx*s,p.y,p.r))p.x+=mx*s;if(!hitsWall(p.x,p.y+my*s,p.r))p.y+=my*s;
- const tx=Math.floor(p.x/T),ty=Math.floor(p.y/T);
- if(map[ty][tx]==='K'){map[ty][tx]='.';keysGot++;updHud()}
- if(map[ty][tx]==='E'&&keysGot===keysTotal){lv++;if(lv>=3)win();else startLevel();return}
- for(const e of enemies){const nx=e.x+e.dx*e.sp*f,ny=e.y+e.dy*e.sp*f;
-  if(hitsWall(nx,ny,e.r)){e.dx*=-1;e.dy*=-1}else{e.x=nx;e.y=ny}}
- for(const c of chasers){const a=Math.atan2(p.y-c.y,p.x-c.x);c.x+=Math.cos(a)*c.sp*f;c.y+=Math.sin(a)*c.sp*f}
- if(inv>0)inv-=f;else{
-  for(const e of [...enemies,...chasers])if(!harmless(e)&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+p.r-2){die('Тебя поймали!');return}}
- if(LEVELS[lv].time){timeLeft-=f/60;if(timeLeft<=0){timeLeft=0;die('Время вышло!');if(running)timeLeft=LEVELS[lv].time}updHud()}
+  let mx = input.right - input.left, my = input.down - input.up;
+  if(mx && my){ mx *= .707; my *= .707; }
+  const p = player, s = p.sp * f;
+  if(!hitsWall(p.x + mx*s, p.y, p.r)) p.x += mx*s;
+  if(!hitsWall(p.x, p.y + my*s, p.r)) p.y += my*s;
+  const tx = Math.floor(p.x/T), ty = Math.floor(p.y/T);
+  if(map[ty][tx] === 'K'){ map[ty][tx] = '.'; keysGot++; updHud(); }
+  if(map[ty][tx] === 'E' && keysGot === keysTotal){
+    lv++;
+    if(lv >= 3) win(); else startLevel();
+    return;
+  }
+  for(const e of enemies){
+    const nx = e.x + e.dx*e.sp*f, ny = e.y + e.dy*e.sp*f;
+    if(hitsWall(nx, ny, e.r)){ e.dx *= -1; e.dy *= -1; } else { e.x = nx; e.y = ny; }
+  }
+  for(const c of chasers){
+    const a = Math.atan2(p.y - c.y, p.x - c.x);
+    c.x += Math.cos(a) * c.sp * f;
+    c.y += Math.sin(a) * c.sp * f;
+  }
+  if(inv > 0) inv -= f;
+  else {
+    for(const e of [...enemies, ...chasers])
+      if(!harmless(e) && Math.hypot(e.x - p.x, e.y - p.y) < e.r + p.r - 2){ die('Тебя поймали!'); return; }
+  }
+  if(LEVELS[lv].time){
+    timeLeft -= f/60;
+    if(timeLeft <= 0){ timeLeft = 0; die('Время вышло!'); if(running) timeLeft = LEVELS[lv].time; }
+    updHud();
+  }
 }
+
 function draw(){
- const L=LEVELS[lv],t=performance.now()/1000;
- ctx.fillStyle=L.dark?'#3a3518':'#d8c878';ctx.fillRect(0,0,800,600);
- for(let y=0;y<15;y++)for(let x=0;x<20;x++){const c=map[y][x];
-  if(c==='#'){ctx.fillStyle=L.dark?'#6b5f22':'#a8963c';ctx.fillRect(x*T,y*T,T,T);ctx.strokeStyle='rgba(0,0,0,.25)';ctx.strokeRect(x*T+.5,y*T+.5,T-1,T-1)}
-  if(c==='K'){ctx.font='26px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔑',x*T+T/2,y*T+T/2+Math.sin(t*4)*3)}
-  if(c==='E'){const open=keysGot===keysTotal;ctx.fillStyle=open?'#2ecc40':'#555';ctx.fillRect(x*T+4,y*T+4,T-8,T-8);
-   ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(open?'🚪':'🔒',x*T+T/2,y*T+T/2)}}
- for(const e of enemies){const h=harmless(e);ctx.globalAlpha=h?.25:1;ctx.fillStyle=h?'#888':'#e0322f';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(e.x-7,e.y-4,5,5);ctx.fillRect(e.x+2,e.y-4,5,5);ctx.globalAlpha=1}
- for(const c of chasers){ctx.fillStyle='rgba(0,0,0,.85)';ctx.beginPath();ctx.arc(c.x,c.y,c.r+Math.sin(t*8)*2,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(c.x-8,c.y-5,4,4);ctx.fillRect(c.x+4,c.y-5,4,4)}
- const p=player;if(!(inv>0&&Math.floor(inv/6)%2)){ctx.fillStyle='#1e90ff';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();ctx.lineWidth=1}
- if(L.dark){const g=ctx.createRadialGradient(p.x,p.y,40,p.x,p.y,130+Math.sin(t*3)*6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.985)');ctx.fillStyle=g;ctx.fillRect(0,0,800,600)}
- if(flash>0){ctx.fillStyle=`rgba(255,0,0,${flash/40})`;ctx.fillRect(0,0,800,600);flash--}
+  const L = LEVELS[lv], t = performance.now()/1000;
+  ctx.fillStyle = L.dark ? '#3a3518' : '#d8c878';
+  ctx.fillRect(0,0,800,600);
+  for(let y=0;y<15;y++) for(let x=0;x<20;x++){
+    const c = map[y][x];
+    if(c === '#'){
+      ctx.fillStyle = L.dark ? '#6b5f22' : '#a8963c';
+      ctx.fillRect(x*T, y*T, T, T);
+      ctx.strokeStyle = 'rgba(0,0,0,.25)';
+      ctx.strokeRect(x*T+.5, y*T+.5, T-1, T-1);
+    }
+    if(c === 'K'){
+      ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🔑', x*T+T/2, y*T+T/2 + Math.sin(t*4)*3);
+    }
+    if(c === 'E'){
+      const open = keysGot === keysTotal;
+      ctx.fillStyle = open ? '#2ecc40' : '#555';
+      ctx.fillRect(x*T+4, y*T+4, T-8, T-8);
+      ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(open ? '🚪' : '🔒', x*T+T/2, y*T+T/2);
+    }
+  }
+  for(const e of enemies){
+    const h = harmless(e);
+    ctx.globalAlpha = h ? .25 : 1;
+    ctx.fillStyle = h ? '#888' : '#e0322f';
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(e.x-7, e.y-4, 5, 5); ctx.fillRect(e.x+2, e.y-4, 5, 5);
+    ctx.globalAlpha = 1;
+  }
+  for(const c of chasers){
+    ctx.fillStyle = 'rgba(0,0,0,.85)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r + Math.sin(t*8)*2, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(c.x-8, c.y-5, 4, 4); ctx.fillRect(c.x+4, c.y-5, 4, 4);
+  }
+  const p = player;
+  if(!(inv > 0 && Math.floor(inv/6) % 2)){
+    ctx.fillStyle = '#1e90ff';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+  }
+  if(L.dark){
+    const g = ctx.createRadialGradient(p.x, p.y, 40, p.x, p.y, 130 + Math.sin(t*3)*6);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,.985)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,800,600);
+  }
+  if(flash > 0){ ctx.fillStyle = `rgba(255,0,0,${flash/40})`; ctx.fillRect(0,0,800,600); flash--; }
 }
-​
-$('btnPlay').onclick=()=>{lv=0;lives=5;startLevel()};
-$('btnLock').onclick=()=>{$('codeInput').value='';$('err').textContent='';show('codeScreen');$('codeInput').focus()};
-$('btnBack').onclick=$('btnBack2').onclick=$('btnMenu').onclick=()=>show('menu');
-function check(){if($('codeInput').value.trim()===SECRET_CODE)show('secretScreen');else{$('err').textContent='❌ Неверный код! Пройди игру, чтобы получить его.';$('codeInput').value=''}}
-$('btnCheck').onclick=check;$('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+
+$('btnPlay').onclick = () => { lv = 0; lives = 5; startLevel(); };
+$('btnLock').onclick = () => { $('codeInput').value = ''; $('err').textContent = ''; show('codeScreen'); $('codeInput').focus(); };
+$('btnBack').onclick = $('btnBack2').onclick = $('btnMenu').onclick = () => show('menu');
+
+function check(){
+  if($('codeInput').value.trim() === SECRET_CODE) show('secretScreen');
+  else { $('err').textContent = '❌ Неверный код! Пройди игру, чтобы получить его.'; $('codeInput').value = ''; }
+}
+$('btnCheck').onclick = check;
+$('codeInput').addEventListener('keydown', e => { if(e.key === 'Enter') check(); });
+
 // фон меню
-map=LEVELS[0].map.map(r=>r.split(''));loadLevel(0);draw();
-</script></body></html>
-​
+map = LEVELS[0].map.map(r => r.split(''));
+loadLevel(0);
+draw();
+</script>
+</body>
+</html>
