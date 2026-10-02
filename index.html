@@ -1,551 +1,195 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mesh Hub Room</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        :root {
-            --bg-gradient-1: #a1b0be;
-            --bg-gradient-2: #b0bdcb;
-            --app-bg: rgba(255, 255, 255, 0.2);
-            --app-border: rgba(255, 255, 255, 0.3);
-            --panel-left: rgba(238, 241, 246, 0.85);
-            --panel-right: rgba(30, 41, 59, 0.15);
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --text-light: #f8fafc;
-            --box-my-id: #ffffff;
-            --card-dark: rgba(30, 41, 59, 0.75);
-            --bubble-other: rgba(255, 255, 255, 0.25);
-            --bubble-my: rgba(59, 130, 246, 0.35);
-            --bubble-my-border: rgba(59, 130, 246, 0.2);
-            --system-log-bg: rgba(255, 255, 255, 0.85);
-            --system-log-text: #1e293b;
-            --input-bg: rgba(0, 0, 0, 0.06);
-            --input-chat-bg: rgba(255, 255, 255, 0.85);
-            --input-chat-text: #1e293b;
-            --peer-border: rgba(0, 0, 0, 0.05);
-        }
-
-        [data-theme="dark"] {
-            --bg-gradient-1: #0f172a;
-            --bg-gradient-2: #1e293b;
-            --app-bg: rgba(15, 23, 42, 0.3);
-            --app-border: rgba(255, 255, 255, 0.1);
-            --panel-left: rgba(30, 41, 59, 0.95);
-            --panel-right: rgba(15, 23, 42, 0.4);
-            --text-dark: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-light: #f8fafc;
-            --box-my-id: rgba(15, 23, 42, 0.6);
-            --card-dark: rgba(15, 23, 42, 0.8);
-            --bubble-other: rgba(255, 255, 255, 0.1);
-            --bubble-my: rgba(37, 99, 235, 0.5);
-            --bubble-my-border: rgba(37, 99, 235, 0.4);
-            --system-log-bg: rgba(15, 23, 42, 0.7);
-            --system-log-text: #f8fafc;
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --input-chat-bg: rgba(15, 23, 42, 0.8);
-            --input-chat-text: #f8fafc;
-            --peer-border: rgba(255, 255, 255, 0.05);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        
-        body { 
-            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; overflow: hidden;
-        }
-        
-        .app-container { 
-            display: flex; width: 100%; max-width: 1280px; height: 90vh; background: var(--app-bg);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; overflow: hidden; 
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15); border: 1px solid var(--app-border);
-        }
-
-        .left-panel { 
-            width: 35%; background: var(--panel-left); display: flex; flex-direction: column; padding: 24px; border-right: 1px solid var(--app-border); 
-        }
-        
-        .left-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .left-header { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: var(--text-dark); }
-        .left-header i { color: #ef4444; font-size: 22px; }
-        
-        .theme-toggle-btn {
-            background: var(--input-bg); border: none; color: var(--text-dark); width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 16px;
-        }
-
-        .profile-box {
-            display: flex; align-items: center; gap: 15px; background: var(--box-my-id); padding: 14px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--app-border);
-        }
-        .avatar-container { position: relative; width: 54px; height: 54px; cursor: pointer; }
-        .avatar-container:hover .avatar-overlay { opacity: 1; }
-        .profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #3b82f6; }
-        .avatar-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; opacity: 0; transition: opacity 0.2s ease;
-        }
-        .profile-details { display: flex; flex-direction: column; flex: 1; }
-        .profile-nickname-input {
-            background: transparent; border: none; border-bottom: 1px dashed var(--text-muted); color: var(--text-dark); font-size: 15px; font-weight: 600; outline: none; padding: 2px 0; width: 100%;
-        }
-
-        .my-id-box { 
-            background: var(--box-my-id); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--app-border);
-        }
-        .my-id-info { display: flex; flex-direction: column; }
-        .my-id-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-        .my-id-value { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-top: 2px; font-family: monospace; }
-        .btn-copy { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 5px; }
-        .btn-copy:hover { color: #3b82f6; }
-
-        .section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-        
-        .connect-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .connect-input { 
-            background: var(--input-bg); border: 1px solid transparent; border-radius: 12px; padding: 12px 14px; font-size: 14px; outline: none; color: var(--text-dark);
-        }
-        
-        /* КНОПКИ ДЕЙСТВИЙ */
-        .action-buttons-holder { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-action { 
-            color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; 
-        }
-        .btn-connect-chat { background: #3a8cd1; }
-        .btn-connect-chat:hover { background: #2b77b8; }
-        .btn-call-trigger { background: #22c55e; }
-        .btn-call-trigger:hover { background: #16a34a; }
-
-        .peers-wrapper { flex: 1; overflow-y: auto; margin-bottom: 15px; }
-        .peers-list { display: flex; flex-direction: column; gap: 6px; }
-        .peer-item { 
-            display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 12px; border: 1px solid var(--peer-border);
-        }
-        .peer-info-block { display: flex; align-items: center; gap: 12px; }
-        .peer-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--app-border); }
-        .peer-details { display: flex; flex-direction: column; }
-        .peer-name { font-size: 14px; font-weight: 600; color: var(--text-dark); }
-        .peer-id-sub { font-size: 11px; color: var(--text-muted); font-family: monospace; }
-        .status-dot-indicator { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
-        .status-dot-indicator.orange { background: #f59e0b; }
-
-        /* ПРАВАЯ ПАНЕЛЬ */
-        .right-panel { 
-            width: 65%; background: var(--panel-right); display: flex; flex-direction: column; padding: 24px 30px; position: relative;
-        }
-        .right-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .room-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; color: var(--text-dark); }
-        .room-title i { color: #3b82f6; }
-        .live-clock { font-size: 14px; font-weight: 400; color: var(--text-dark); opacity: 0.8; }
-
-        .chat-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-right: 10px; margin-bottom: 24px; }
-        .chat-bubble { display: flex; gap: 12px; max-width: 75%; align-items: flex-end; }
-        .chat-bubble.system-log { 
-            max-width: 100%; background: var(--system-log-bg); color: var(--system-log-text); padding: 12px 20px; border-radius: 18px; font-size: 14px; flex-direction: column; align-items: flex-start; gap: 4px; border: 1px solid var(--app-border);
-        }
-        .system-log-header { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-
-        .chat-bubble.incoming { align-self: flex-start; }
-        .chat-bubble.outgoing { align-self: flex-end; flex-direction: row-reverse; }
-        
-        .bubble-content { 
-            background: var(--bubble-other); color: var(--text-dark); padding: 14px 18px; border-radius: 18px 18px 18px 4px; font-size: 15px; backdrop-filter: blur(5px); border: 1px solid var(--app-border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); word-break: break-word;
-        }
-        .chat-bubble.outgoing .bubble-content { 
-            background: var(--bubble-my); color: var(--text-dark); border-radius: 18px 18px 4px 18px; border: 1px solid var(--bubble-my-border);
-        }
-        .bubble-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; display: block; }
-
-        .bottom-widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .widget-card { 
-            background: var(--card-dark); border-radius: 20px; padding: 18px 24px; color: var(--text-light); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.08);
-        }
-        .widget-info { display: flex; flex-direction: column; gap: 8px; }
-        .widget-label { font-size: 12px; color: #94a3b8; font-weight: 500; }
-        .widget-pill { 
-            background: rgba(255,255,255,0.08); border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: fit-content;
-        }
-        .widget-pill.active { background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.4); color: #4ade80; }
-        .widget-icon-box { opacity: 0.4; font-size: 28px; }
-
-        .input-wrapper { display: flex; gap: 12px; align-items: center; width: 100%; }
-        .input-bar-container { 
-            flex: 1; background: var(--input-chat-bg); border-radius: 16px; padding: 4px 6px 4px 18px; display: flex; align-items: center; border: 1px solid var(--app-border);
-        }
-        .input-bar-container input { 
-            flex: 1; background: none; border: none; outline: none; padding: 12px 0; font-size: 14px; color: var(--input-chat-text);
-        }
-        .btn-send { 
-            background: #3a8cd1; color: #fff; border: none; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
-        }
-
-        /* ОКНО АКТИВНОГО ЗВОНКА (ИНТЕРФЕЙС СВЯЗИ) */
-        .call-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95);
-            z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff;
-        }
-        .call-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #22c55e; margin-bottom: 20px; object-fit: cover; animation: pulse 2s infinite; }
-        .call-status { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-        .call-peer-id { font-size: 14px; color: #94a3b8; font-family: monospace; margin-bottom: 40px; }
-        .call-controls { display: flex; gap: 20px; }
-        .btn-call-control { width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; }
-        .btn-hangup { background: #ef4444; }
-        .btn-hangup:hover { background: #dc2626; }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-
-        #audio-containers, #avatar-file-input { display: none; }
-    </style>
-</head>
-<body>
-
-    <div class="app-container">
-        <aside class="left-panel">
-            <div class="left-header-container">
-                <div class="left-header">
-                    <i class="fa-solid fa-users"></i>
-                    <span>Mesh Hub Room</span>
-                </div>
-                <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn">
-                    <i class="fa-solid fa-moon"></i>
-                </button>
-            </div>
-
-            <div class="profile-box">
-                <div class="avatar-container" onclick="triggerAvatarUpload()">
-                    <img id="my-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Admin" class="profile-avatar-img" alt="Avatar">
-                    <div class="avatar-overlay"><i class="fa-solid fa-camera"></i></div>
-                </div>
-                <div class="profile-details">
-                    <span class="my-id-label">Ваш никнейм:</span>
-                    <input type="text" id="my-nickname" class="profile-nickname-input" value="Челик" onchange="syncProfileData()">
-                </div>
-                <input type="file" id="avatar-file-input" accept="image/*" onchange="handleAvatarChange(event)">
-            </div>
-
-            <div class="my-id-box">
-                <div class="my-id-info">
-                    <span class="my-id-label">Ваш выделенный ID:</span>
-                    <span class="my-id-value" id="my-peer-id">Генерация...</span>
-                </div>
-                <button class="btn-copy" onclick="copyMyId()"><i class="fa-regular fa-copy"></i></button>
-            </div>
-
-            <div class="connect-form">
-                <span class="section-label">Идентификатор удаленного узла:</span>
-                <input type="text" id="remote-peer-id" class="connect-input" placeholder="Вставьте ID кода...">
-                
-                <div class="action-buttons-holder">
-                    <button class="btn-action btn-connect-chat" onclick="addNewPeerText()">
-                        <i class="fa-solid fa-plug"></i> Войти в чат
-                    </button>
-                    <button class="btn-action btn-call-trigger" onclick="openCallPrompt()">
-                        <i class="fa-solid fa-phone"></i> Позвонить
-                    </button>
-                </div>
-            </div>
-
-            <span class="section-label">Участники сессии:</span>
-            <div class="peers-wrapper">
-                <div class="peers-list" id="peers-list"></div>
-            </div>
-        </aside>
-
-        <main class="right-panel">
-            <div class="call-modal" id="call-screen">
-                <img id="call-screen-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Call" class="call-avatar" alt="call">
-                <div class="call-status" id="call-status-text">Голосовое соединение...</div>
-                <div class="call-peer-id" id="call-status-id">NODE_00000</div>
-                <div class="call-controls">
-                    <button class="btn-call-control btn-hangup" onclick="hangupCall()"><i class="fa-solid fa-phone-slash"></i></button>
-                </div>
-            </div>
-
-            <div class="right-header">
-                <div class="room-title"><i class="fa-solid fa-globe"></i> <span>Общий чат комнаты</span></div>
-                <div class="live-clock" id="live-clock">00:00:00</div>
-            </div>
-
-            <div class="chat-container" id="chat-box">
-                <div class="chat-bubble system-log">
-                    <span class="system-log-header">// Сетевой статус</span>
-                    <span>[Система]: STUN-сервер инициализирован. Вы можете подключаться текстом или сразу совершить прямой звонок по ID.</span>
-                </div>
-            </div>
-
-            <div class="bottom-widgets">
-                <div class="widget-card">
-                    <div class="widget-info">
-                        <span class="widget-label">Активные аудиопотоки</span>
-                        <div class="widget-pill" id="audio-status-pill">Линии: 0 активных</div>
-                    </div>
-                    <div class="widget-icon-box"><i class="fa-solid fa-wave-square"></i></div>
-                </div>
-                <div class="widget-card">
-                    <div class="widget-info">
-                        <span class="widget-label">Сетевой режим</span>
-                        <div class="widget-pill active">P2P Mesh Grid</div>
-                    </div>
-                    <div class="widget-icon-box"><i class="fa-solid fa-circle-nodes"></i></div>
-                </div>
-            </div>
-
-            <div class="input-wrapper">
-                <div class="input-bar-container">
-                    <input type="text" id="message-input" placeholder="Написать сообщение в общий чат для всех...">
-                </div>
-                <button class="btn-send" onclick="sendGroupMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-        </main>
-    </div>
-
-    <div id="audio-containers"></div>
-
-    <script>
-        let peer = null;
-        const myId = "NODE_" + Math.floor(10000 + Math.random() * 90000);
-        let dataConnections = {}; 
-        let activeCalls = {};
-        let localStream = null;
-        let myAvatarData = "https://api.dicebear.com/7.x/bottts/svg?seed=Admin";
-        let peersMetadata = {};
-
-        const peerConfig = {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
-                ]
-            }
-        };
-
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-        }
-
-        setInterval(() => {
-            document.getElementById('live-clock').innerText = new Date().toTimeString().split(' ')[0];
-        }, 1000);
-
-        document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendGroupMessage(); });
-        function copyMyId() { navigator.clipboard.writeText(myId); alert("ID скопирован: " + myId); }
-        function triggerAvatarUpload() { document.getElementById('avatar-file-input').click(); }
-
-        function handleAvatarChange(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                myAvatarData = e.target.result;
-                document.getElementById('my-avatar').src = myAvatarData;
-                syncProfileData();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function syncProfileData() {
-            const nickname = document.getElementById('my-nickname').value.trim() || "Челик";
-            Object.values(dataConnections).forEach(conn => {
-                if (conn.open) conn.send({ type: 'profile_sync', nickname: nickname, avatar: myAvatarData });
-            });
-            updateInterfaceCounters();
-        }
-
-        async function initAudio() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                appendSystemLog("Аудио-микрофон захвачен и готов.");
-            } catch (e) {
-                appendSystemLog("Внимание: Микрофон заблокирован. Вы сможете только слушать.");
-            }
-            initPeer();
-        }
-        initAudio();
-
-        function initPeer() {
-            peer = new Peer(myId, peerConfig);
-            peer.on('open', (id) => { document.getElementById('my-peer-id').innerText = id; });
-            peer.on('connection', handleInboundDataConnection);
-            
-            peer.on('call', async (call) => {
-                // Входящий звонок: открываем интерфейс окна звонка у того, кому звонят!
-                if(!localStream) {
-                    try { localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); } catch(e){}
-                }
-                call.answer(localStream || new MediaStream());
-                showCallScreen(call.peer);
-                handleInboundAudioCall(call);
-            });
-        }
-
-        function addNewPeerText() {
-            const remoteId = document.getElementById('remote-peer-id').value.trim();
-            if (!remoteId || remoteId === myId || dataConnections[remoteId]) return;
-            appendSystemLog(`Подключение текстового канала к ${remoteId}...`);
-            handleInboundDataConnection(peer.connect(remoteId));
-            document.getElementById('remote-peer-id').value = '';
-        }
-
-        // КНОПКА ЗВОНКА: запрашивает ввод или берет из поля, и сразу запускает окно звонка на обоих ПК
-        function openCallPrompt() {
-            let remoteId = document.getElementById('remote-peer-id').value.trim();
-            if (!remoteId) {
-                remoteId = prompt("Введите ID пользователя, которому хотите позвонить:");
-            }
-            if (!remoteId || remoteId === myId) return;
-
-            // Открываем окно звонка у себя
-            showCallScreen(remoteId);
-
-            // Инициируем текстовую связку, если её не было
-            if(!dataConnections[remoteId]) {
-                handleInboundDataConnection(peer.connect(remoteId));
-            }
-
-            // Направляем аудио-поток
-            const call = peer.call(remoteId, localStream || new MediaStream());
-            handleInboundAudioCall(call);
-            document.getElementById('remote-peer-id').value = '';
-        }
-
-        function showCallScreen(id) {
-            const screen = document.getElementById('call-screen');
-            document.getElementById('call-status-id').innerText = id;
-            document.getElementById('call-status-text').innerText = "Прямой разговор...";
-            
-            const meta = peersMetadata[id];
-            if(meta) document.getElementById('call-screen-avatar').src = meta.avatar;
-            
-            screen.style.display = 'flex';
-        }
-
-        function hangupCall() {
-            Object.values(activeCalls).forEach(call => call.close());
-            document.getElementById('call-screen').style.display = 'none';
-            appendSystemLog("Вы завершили звонок.");
-        }
-
-        function handleInboundAudioCall(call) {
-            activeCalls[call.peer] = call;
-            call.on('stream', (remoteStream) => {
-                let audioElem = document.getElementById(`audio-${call.peer}`);
-                if (!audioElem) {
-                    audioElem = document.createElement('audio');
-                    audioElem.id = `audio-${call.peer}`;
-                    audioElem.autoplay = true;
-                    document.getElementById('audio-containers').appendChild(audioElem);
-                }
-                audioElem.srcObject = remoteStream;
-                // Принудительный старт (баг-фикс автоплея браузеров)
-                audioElem.play().catch(e => console.log("Браузер требовал клика"));
-                updateInterfaceCounters();
-            });
-            call.on('close', () => {
-                if (document.getElementById(`audio-${call.peer}`)) document.getElementById(`audio-${call.peer}`).remove();
-                delete activeCalls[call.peer];
-                document.getElementById('call-screen').style.display = 'none';
-                updateInterfaceCounters();
-            });
-        }
-
-        function handleInboundDataConnection(conn) {
-            dataConnections[conn.peer] = conn;
-            conn.on('open', () => {
-                const nickname = document.getElementById('my-nickname').value.trim() || "Челик";
-                conn.send({ type: 'profile_sync', nickname: nickname, avatar: myAvatarData });
-                updateInterfaceCounters();
-            });
-            conn.on('data', (data) => {
-                if (data.type === 'chat') {
-                    const meta = peersMetadata[conn.peer] || { nickname: conn.peer, avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${conn.peer}` };
-                    appendMessage(meta.nickname, data.text, 'incoming', meta.avatar);
-                } else if (data.type === 'profile_sync') {
-                    peersMetadata[conn.peer] = { nickname: data.nickname, avatar: data.avatar };
-                    updateInterfaceCounters();
-                }
-            });
-            conn.on('close', () => {
-                delete dataConnections[conn.peer];
-                delete peersMetadata[conn.peer];
-                updateInterfaceCounters();
-            });
-        }
-
-        function sendGroupMessage() {
-            const input = document.getElementById('message-input');
-            const text = input.value.trim();
-            if (!text) return;
-            Object.values(dataConnections).forEach(conn => { if (conn.open) conn.send({ type: 'chat', text: text }); });
-            const myName = document.getElementById('my-nickname').value.trim() || "Челик";
-            appendMessage(myName, text, 'outgoing', myAvatarData);
-            input.value = '';
-        }
-
-        function updateInterfaceCounters() {
-            const container = document.getElementById('peers-list');
-            container.innerHTML = '';
-            const myName = document.getElementById('my-nickname').value.trim() || "Челик";
-            container.appendChild(createPeerRow(`${myName} (Вы)`, myId, false, myAvatarData));
-
-            Object.keys(dataConnections).forEach(id => {
-                const meta = peersMetadata[id] || { nickname: "Участник", avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${id}` };
-                container.appendChild(createPeerRow(meta.nickname, id, true, meta.avatar));
-            });
-
-            const totalCalls = Object.keys(activeCalls).length;
-            const audioPill = document.getElementById('audio-status-pill');
-            audioPill.innerText = totalCalls > 0 ? `Линии: ${totalCalls} на связи` : `Линии: 0 активных`;
-            if (totalCalls > 0) audioPill.classList.add('active'); else audioPill.classList.remove('active');
-        }
-
-        function createPeerRow(name, id, isOnline, avatarSrc) {
-            const row = document.createElement('div');
-            row.className = 'peer-item';
-            row.innerHTML = `
-                <div class="peer-info-block">
-                    <img src="${avatarSrc}" class="peer-avatar" alt="av">
-                    <div class="peer-details"><span class="peer-name">${name}</span><span class="peer-id-sub">${id}</span></div>
-                </div>
-                <div class="status-dot-indicator ${isOnline ? '' : 'orange'}"></div>
-            `;
-            return row;
-        }
-
-        function appendMessage(sender, text, type, avatarSrc) {
-            const box = document.getElementById('chat-box');
-            const bubble = document.createElement('div');
-            bubble.className = `chat-bubble ${type}`;
-            bubble.innerHTML = `
-                <img src="${avatarSrc}" class="peer-avatar" style="width:28px; height:28px;" alt="av">
-                <div class="bubble-content"><span class="bubble-meta">${sender}</span><div>${text}</div></div>
-            `;
-            box.appendChild(bubble);
-            setTimeout(() => { box.scrollTop = box.scrollHeight; }, 30);
-        }
-
-        function appendSystemLog(text) {
-            const box = document.getElementById('chat-box');
-            const p = document.createElement('p');
-            p.style.color = 'var(--text-muted)'; p.style.fontSize = '12px'; p.style.padding = '2px 20px';
-            p.innerText = `[Система]: ${text}`;
-            box.appendChild(p);
-            box.scrollTop = box.scrollHeight;
-        }
-        updateInterfaceCounters();
-    </script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лабиринт: 3 уровня</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111;color:#eee;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;user-select:none}
+#wrap{position:relative;width:800px;max-width:100vw}
+canvas{display:block;width:100%;background:#000;border:3px solid #c9b458;border-radius:6px}
+#hud{display:flex;justify-content:space-between;width:100%;padding:6px 4px;font-size:18px;color:#e8d98a}
+.screen{position:absolute;inset:0;background:rgba(10,10,5,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:6px;padding:20px}
+.hidden{display:none!important}
+h1{color:#e8d98a;margin:0 0 10px;font-size:40px;letter-spacing:2px}
+p{max-width:560px;line-height:1.5;color:#ccc}
+button{background:#c9b458;color:#111;border:0;padding:12px 26px;font-size:20px;font-weight:bold;border-radius:8px;margin:6px;cursor:pointer}
+button:hover{background:#f0dc7a}button.alt{background:#444;color:#eee}
+input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px;border:2px solid #c9b458;background:#222;color:#fff;letter-spacing:6px}
+#codeShow{font-size:64px;color:#7CFC00;letter-spacing:12px;font-family:monospace;margin:10px}
+#secret{font-size:72px;color:#ffe75a;text-shadow:0 0 20px #ffd000;letter-spacing:6px;margin:20px;animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.6;transform:scale(1.05)}}
+#err{color:#ff5555;height:22px}
+#pad{display:none;margin-top:10px}#pad button{width:64px;height:64px;font-size:26px;padding:0}
+@media (pointer:coarse){#pad{display:grid;grid-template-columns:repeat(3,64px);gap:4px}}
+</style></head><body>
+<div id="wrap">
+ <div id="hud"><span id="hLevel">Уровень 1/3</span><span id="hKeys">🔑 0/0</span><span id="hTime"></span><span id="hLives">❤️❤️❤️❤️❤️</span></div>
+ <canvas id="c" width="800" height="600"></canvas>
+​
+ <div class="screen" id="menu">
+  <h1>ЛАБИРИНТ</h1>
+  <p>3 сложных уровня. Собери все ключи 🔑, чтобы открыть выход. Не касайся красных врагов — но иногда они становятся прозрачными 👻, и тогда сквозь них можно пройти! У тебя всего 5 жизней на всю игру — потеряешь все, и начнёшь с первого уровня.<br>Управление: <b>WASD</b> или <b>стрелки</b>.</p>
+  <button id="btnPlay">▶ Играть</button>
+  <button class="alt" id="btnLock">🔒 Секрет (нужен код)</button>
+ </div>
+​
+ <div class="screen hidden" id="codeScreen">
+  <h1>🔒 Введите код</h1>
+  <p>Код выдаётся только тем, кто прошёл все 3 уровня.</p>
+  <input id="codeInput" maxlength="6" inputmode="numeric" autocomplete="off">
+  <div id="err"></div>
+  <div><button id="btnCheck">Проверить</button><button class="alt" id="btnBack">Назад</button></div>
+ </div>
+​
+ <div class="screen hidden" id="secretScreen">
+  <h1>✅ Код верный!</h1>
+  <p>Твоё секретное слово:</p>
+  <div id="secret">БЕКРУМС</div>
+  <button class="alt" id="btnBack2">В меню</button>
+ </div>
+​
+ <div class="screen hidden" id="msg">
+  <h1 id="msgTitle"></h1><p id="msgText"></p><button id="msgBtn">Дальше</button>
+ </div>
+​
+ <div class="screen hidden" id="winScreen">
+  <h1>🏆 ТЫ ПРОШЁЛ ВСЕ 3 УРОВНЯ!</h1>
+  <p>Запомни этот код. При следующем запуске нажми «🔒 Секрет» и введи его:</p>
+  <div id="codeShow"></div>
+  <button id="btnMenu">В меню</button>
+ </div>
+</div>
+<div id="pad"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button></div>
+​
+<script>
+const SECRET_CODE="7349";
+/*LEVELS*/
+const LEVELS=[
+{name:"Уровень 1: Коридоры",time:0,safe:.5,dark:false,chasers:0,map:[
+"####################",
+"#S.....#...........#",
+"#.####.#.#####.###.#",
+"#.#....#.....#...#.#",
+"#.#.########.###.#.#",
+"#.#........#...#.#K#",
+"#.########.###.#.###",
+"#..........#...#...#",
+"######.###.#.#####.#",
+"#....#...#.#.....#.#",
+"#.##.###.#.#####.#.#",
+"#K.#.....#.....#...#",
+"####.#########.###.#",
+"#E.................#",
+"####################"],
+enemies:[[3,9,"h",1.6],[10,1,"h",1.8],[5,7,"h",1.8],[18,8,"v",1.5],[8,13,"h",2],[14,9,"h",1.7]]},
+{name:"Уровень 2: Наперегонки со временем",time:100,safe:.4,dark:false,chasers:0,map:[
+"####################",
+"#S..#.......#.....K#",
+"#.#.#.#####.#.###.##",
+"#.#...#...#...#....#",
+"#.#####.#.#####.##.#",
+"#.....#.#.....#..#.#",
+"#####.#.#####.##.#.#",
+"#K..#.#.....#..#...#",
+"#.#.#.#####.##.###.#",
+"#.#...#...#..#...#.#",
+"#.#####.#.##.###.#.#",
+"#.......#..#...#.#.#",
+"#.#########.##.#.#.#",
+"#..........K.#...#E#",
+"####################"],
+enemies:[[8,1,"h",3],[3,5,"h",2.6],[1,9,"v",2.4],[9,7,"h",3],[5,11,"h",3.2],[18,6,"v",2.6],[6,13,"h",3.4],[16,1,"h",2.8],[16,9,"v",2.2],[7,3,"v",2]]},
+{name:"Уровень 3: Темнота",time:130,safe:.35,dark:true,chasers:1,map:[
+"####################",
+"#S.......#........K#",
+"#.#####.##.######.##",
+"#.#...#....#....#..#",
+"#.#.#.######.##.##.#",
+"#...#......#..#....#",
+"###.######.##.####.#",
+"#K#......#..#....#.#",
+"#.######.##.####.#.#",
+"#......#..#....#...#",
+"#.####.##.####.#####",
+"#.#..#..#....#.....#",
+"#.#.##.######.####.#",
+"#...#....K........E#",
+"####################"],
+enemies:[[5,1,"h",3],[13,1,"h",3.2],[7,5,"h",2.8],[18,4,"v",2.6],[4,7,"h",3],[3,9,"h",3.2],[12,9,"h",2.8],[16,11,"h",3],[6,13,"h",3.4],[14,13,"h",3.6],[1,10,"v",2.4]]}
+];
+/*END*/
+const T=40,cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+let lv=0,lives=5,map,player,enemies,keysTotal,keysGot,exitPos,timeLeft,running=false,inv=0,chasers=[],lastT=0,flash=0;
+const input={up:0,down:0,left:0,right:0};
+const km={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+addEventListener('keydown',e=>{if(km[e.code]){input[km[e.code]]=1;e.preventDefault()}});
+addEventListener('keyup',e=>{if(km[e.code])input[km[e.code]]=0});
+document.querySelectorAll('#pad button').forEach(b=>{const k=b.dataset.k;
+ b.addEventListener('touchstart',e=>{input[k]=1;e.preventDefault()});b.addEventListener('touchend',e=>{input[k]=0;e.preventDefault()});});
+​
+function show(id){['menu','codeScreen','secretScreen','msg','winScreen'].forEach(s=>$(s).classList.toggle('hidden',s!==id))}
+function wall(tx,ty){if(ty<0||ty>=map.length||tx<0||tx>=20)return true;return map[ty][tx]==='#'}
+function hitsWall(x,y,r){for(let ty=Math.floor((y-r)/T);ty<=Math.floor((y+r-.01)/T);ty++)for(let tx=Math.floor((x-r)/T);tx<=Math.floor((x+r-.01)/T);tx++)if(wall(tx,ty))return true;return false}
+​
+function loadLevel(i){
+ const L=LEVELS[i];map=L.map.map(r=>r.split(''));keysTotal=0;keysGot=0;
+ for(let y=0;y<15;y++)for(let x=0;x<20;x++){const c=map[y][x];
+  if(c==='S'){player={x:x*T+T/2,y:y*T+T/2,sx:x*T+T/2,sy:y*T+T/2,r:11,sp:3.2}}
+  if(c==='K')keysTotal++;if(c==='E')exitPos={x,y};}
+ enemies=L.enemies.map(([x,y,d,s])=>({x:x*T+T/2,y:y*T+T/2,dx:d==='h'?1:0,dy:d==='v'?1:0,sp:s,r:11,ph:Math.random()*3}));
+ chasers=[];for(let k=0;k<L.chasers;k++)chasers.push({x:exitPos.x*T+T/2,y:exitPos.y*T+T/2-200,sp:1.05,r:16});
+ timeLeft=L.time;inv=60;updHud();
+}
+function updHud(){$('hLevel').textContent=`Уровень ${lv+1}/3`;$('hKeys').textContent=`🔑 ${keysGot}/${keysTotal}`;
+ $('hLives').textContent='❤️'.repeat(lives)+'🖤'.repeat(5-lives);$('hTime').textContent=LEVELS[lv].time?`⏱ ${Math.ceil(timeLeft)}с`:'';}
+​
+function message(t,txt,btn,cb){$('msgTitle').textContent=t;$('msgText').innerHTML=txt;$('msgBtn').textContent=btn;$('msgBtn').onclick=cb;show('msg');running=false}
+function startLevel(){loadLevel(lv);const L=LEVELS[lv];
+ let extra=L.time?`<br>⏱ Ограничение по времени: ${L.time} секунд!`:'';if(L.dark)extra+='<br>🌑 Ты видишь только вокруг себя. За тобой кто-то идёт сквозь стены...';
+ message(L.name,`Собери ${keysTotal} ключа и доберись до выхода.${extra}`,'Начать',()=>{show(null);running=true;lastT=performance.now();requestAnimationFrame(loop)});}
+function die(reason){lives--;flash=20;updHud();
+ if(lives<=0){running=false;message('💀 ИГРА ОКОНЧЕНА',reason+'<br>Жизни закончились. Начинаем с первого уровня!','Заново',()=>{lv=0;lives=5;startLevel()});return}
+ player.x=player.sx;player.y=player.sy;inv=90;
+ if(LEVELS[lv].time&&timeLeft<=0)timeLeft=LEVELS[lv].time;
+ chasers.forEach(c=>{c.x=exitPos.x*T+T/2;c.y=exitPos.y*T+T/2-200});}
+function win(){running=false;localStorage.setItem('labyrinthDone','1');$('codeShow').textContent=SECRET_CODE;show('winScreen')}
+​
+function harmless(e){if(e.ph===undefined)return false;const P=3,v=((performance.now()/1000+e.ph)%P)/P;return v<LEVELS[lv].safe}
+function loop(now){if(!running)return;const f=Math.min(3,(now-lastT)/16.67);lastT=now;update(f);draw();requestAnimationFrame(loop)}
+function update(f){
+ let mx=input.right-input.left,my=input.down-input.up;if(mx&&my){mx*=.707;my*=.707}
+ const p=player,s=p.sp*f;
+ if(!hitsWall(p.x+mx*s,p.y,p.r))p.x+=mx*s;if(!hitsWall(p.x,p.y+my*s,p.r))p.y+=my*s;
+ const tx=Math.floor(p.x/T),ty=Math.floor(p.y/T);
+ if(map[ty][tx]==='K'){map[ty][tx]='.';keysGot++;updHud()}
+ if(map[ty][tx]==='E'&&keysGot===keysTotal){lv++;if(lv>=3)win();else startLevel();return}
+ for(const e of enemies){const nx=e.x+e.dx*e.sp*f,ny=e.y+e.dy*e.sp*f;
+  if(hitsWall(nx,ny,e.r)){e.dx*=-1;e.dy*=-1}else{e.x=nx;e.y=ny}}
+ for(const c of chasers){const a=Math.atan2(p.y-c.y,p.x-c.x);c.x+=Math.cos(a)*c.sp*f;c.y+=Math.sin(a)*c.sp*f}
+ if(inv>0)inv-=f;else{
+  for(const e of [...enemies,...chasers])if(!harmless(e)&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+p.r-2){die('Тебя поймали!');return}}
+ if(LEVELS[lv].time){timeLeft-=f/60;if(timeLeft<=0){timeLeft=0;die('Время вышло!');if(running)timeLeft=LEVELS[lv].time}updHud()}
+}
+function draw(){
+ const L=LEVELS[lv],t=performance.now()/1000;
+ ctx.fillStyle=L.dark?'#3a3518':'#d8c878';ctx.fillRect(0,0,800,600);
+ for(let y=0;y<15;y++)for(let x=0;x<20;x++){const c=map[y][x];
+  if(c==='#'){ctx.fillStyle=L.dark?'#6b5f22':'#a8963c';ctx.fillRect(x*T,y*T,T,T);ctx.strokeStyle='rgba(0,0,0,.25)';ctx.strokeRect(x*T+.5,y*T+.5,T-1,T-1)}
+  if(c==='K'){ctx.font='26px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔑',x*T+T/2,y*T+T/2+Math.sin(t*4)*3)}
+  if(c==='E'){const open=keysGot===keysTotal;ctx.fillStyle=open?'#2ecc40':'#555';ctx.fillRect(x*T+4,y*T+4,T-8,T-8);
+   ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(open?'🚪':'🔒',x*T+T/2,y*T+T/2)}}
+ for(const e of enemies){const h=harmless(e);ctx.globalAlpha=h?.25:1;ctx.fillStyle=h?'#888':'#e0322f';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(e.x-7,e.y-4,5,5);ctx.fillRect(e.x+2,e.y-4,5,5);ctx.globalAlpha=1}
+ for(const c of chasers){ctx.fillStyle='rgba(0,0,0,.85)';ctx.beginPath();ctx.arc(c.x,c.y,c.r+Math.sin(t*8)*2,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(c.x-8,c.y-5,4,4);ctx.fillRect(c.x+4,c.y-5,4,4)}
+ const p=player;if(!(inv>0&&Math.floor(inv/6)%2)){ctx.fillStyle='#1e90ff';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();ctx.lineWidth=1}
+ if(L.dark){const g=ctx.createRadialGradient(p.x,p.y,40,p.x,p.y,130+Math.sin(t*3)*6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.985)');ctx.fillStyle=g;ctx.fillRect(0,0,800,600)}
+ if(flash>0){ctx.fillStyle=`rgba(255,0,0,${flash/40})`;ctx.fillRect(0,0,800,600);flash--}
+}
+​
+$('btnPlay').onclick=()=>{lv=0;lives=5;startLevel()};
+$('btnLock').onclick=()=>{$('codeInput').value='';$('err').textContent='';show('codeScreen');$('codeInput').focus()};
+$('btnBack').onclick=$('btnBack2').onclick=$('btnMenu').onclick=()=>show('menu');
+function check(){if($('codeInput').value.trim()===SECRET_CODE)show('secretScreen');else{$('err').textContent='❌ Неверный код! Пройди игру, чтобы получить его.';$('codeInput').value=''}}
+$('btnCheck').onclick=check;$('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+// фон меню
+map=LEVELS[0].map.map(r=>r.split(''));loadLevel(0);draw();
+</script></body></html>
+​
