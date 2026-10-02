@@ -6,7 +6,7 @@
 #wrap{position:relative;width:800px;max-width:100vw}
 canvas{display:block;width:100%;background:#000;border:3px solid #c9b458;border-radius:6px}
 #hud{display:flex;justify-content:space-between;width:100%;padding:6px 4px;font-size:18px;color:#e8d98a}
-.screen{position:absolute;inset:0;background:rgba(10,10,5,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:6px;padding:20px}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;overflow:auto;background:rgba(10,10,5,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:6px;padding:20px}
 .hidden{display:none!important}
 h1{color:#e8d98a;margin:0 0 10px;font-size:40px;letter-spacing:2px}
 p{max-width:560px;line-height:1.5;color:#ccc}
@@ -27,7 +27,7 @@ input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px
  <div class="screen" id="menu">
   <h1>ЛАБИРИНТ</h1>
   <p>3 сложных уровня. Собери все ключи 🔑, чтобы открыть выход. Не касайся красных врагов — но иногда они становятся прозрачными 👻, и тогда сквозь них можно пройти! У тебя всего 5 жизней на всю игру — потеряешь все, и начнёшь с первого уровня.<br>Управление: <b>WASD</b> или <b>стрелки</b>.</p>
-  <button id="btnPlay">▶ Играть</button>
+  <button id="btnPlay" type="button">▶ Играть</button>
   <button class="alt" id="btnLock">🔒 Секрет (нужен код)</button>
  </div>
 ​
@@ -57,9 +57,11 @@ input{font-size:28px;text-align:center;width:200px;padding:8px;border-radius:8px
   <button id="btnMenu">В меню</button>
  </div>
 </div>
+<div style="color:#666;font-size:12px;margin-top:6px">версия 3</div>
 <div id="pad"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button></div>
 ​
 <script>
+window.onerror=function(m,u,l){var d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;right:0;background:#b00;color:#fff;padding:10px;z-index:9999;font:16px monospace";d.textContent="Ошибка: "+m+" (строка "+l+")";document.body.appendChild(d)};
 const SECRET_CODE="7349";
 /*LEVELS*/
 const LEVELS=[
@@ -192,3 +194,4 @@ $('btnCheck').onclick=check;$('codeInput').addEventListener('keydown',e=>{if(e.k
 // фон меню
 map=LEVELS[0].map.map(r=>r.split(''));loadLevel(0);draw();
 </script></body></html>
+​
